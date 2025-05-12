@@ -17,7 +17,7 @@ jobs:
     needs: [lint, test]
     environment:
       name: pypi
-      url: https://pypi.org/p/requestspro
+      url: https://pypi.org/p/requests-pro
     permissions:
       id-token: write
     steps:

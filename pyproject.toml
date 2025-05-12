@@ -12,7 +12,7 @@ dev = [
 ]
 
 [project]
-name = "requestspro"
+name = "requests-pro"
 authors = [{"name"="Henrique Bastos", "email"="henrique@bastos.net"}]
 version = "1.0.0"
 description = "RequestsPro: The easy way to build professional-grade API clients."
@@ -47,10 +47,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/henriquebastos/requestspro"
-Documentation = "https://github.com/henriquebastos/requestspro"
-Repository = "https://github.com/henriquebastos/requestspro"
-"Issue Tracker" = "https://github.com/henriquebastos/requestspro/issues"
+Homepage = "https://github.com/henriquebastos/requests-pro"
+Documentation = "https://github.com/henriquebastos/requests-pro"
+Repository = "https://github.com/henriquebastos/requests-pro"
+"Issue Tracker" = "https://github.com/henriquebastos/requests-pro/issues"
 
 [tool.pytest.ini_options]
 python_files = "test*.py"

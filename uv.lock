@@ -369,7 +369,7 @@ wheels = [
 ]
 
 [[package]]
-name = "requestspro"
+name = "requests-pro"
 version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
