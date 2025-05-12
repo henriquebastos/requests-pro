@@ -15,7 +15,7 @@ RequestsPro is the easy way to build professional-grade API clients.
 
 ## Quick start
 
-Check the `demo/eduzz.py` to see a simple yet complete API client example.
+Check the [demo/eduzz.py](https://github.com/henriquebastos/requestspro/blob/main/demo/eduzz.py) to see a simple yet complete API client example.
 
 ## Install
 
