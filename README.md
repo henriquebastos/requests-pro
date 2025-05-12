@@ -20,7 +20,7 @@ Check the [demo/eduzz.py](https://github.com/henriquebastos/requestspro/blob/mai
 ## Install
 
 ```bash
-pip install requestspro
+pip install requests-pro
 ```
 
 ## License
