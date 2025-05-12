@@ -1,0 +1,87 @@
+[dependency-groups]
+demo = [
+    "pytz>=2025.2",
+]
+dev = [
+    "pytest >= 8.3.2",
+    "freezegun >= 1.5.1",
+    "pylint >= 3.2.6",
+    "pre-commit >= 3.8.0",
+    "responses>=0.25.7",
+    "ruff>=0.11.8",
+]
+
+[project]
+name = "requestspro"
+authors = [{"name"="Henrique Bastos", "email"="henrique@bastos.net"}]
+version = "1.0.0"
+description = "RequestsPro: The easy way to build professional-grade API clients."
+keywords = [
+    "http",
+    "api",
+    "client",
+    "requests",
+    "rest",
+    "api-client",
+    "http-client",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests >= 2.32.3",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/henriquebastos/requestspro"
+Documentation = "https://github.com/henriquebastos/requestspro"
+Repository = "https://github.com/henriquebastos/requestspro"
+"Issue Tracker" = "https://github.com/henriquebastos/requestspro/issues"
+
+[tool.pytest.ini_options]
+python_files = "test*.py"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+lines-after-imports = 2
+known-local-folder = ["requestspro"]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+  "testing"
+]
+
+[tool.ruff.lint.isort.sections]
+testing = ["pytest", "responses", "freezegun", "unittest", "mock"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+# extend-select = ["DTZ", "EM", "I", "UP", "C", "PGH", "PIE", "B", "FBT"]
+extend-ignore = ["E731", "D", "S", "ANN", "ARG", "RUF012", "RUF100", "SLF", "PLR", "N", "COM", "ERA001"]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
