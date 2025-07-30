@@ -10,8 +10,17 @@ from requestspro.auth import RecoverableAuth
 class BaseSession(Session):
     """A base class for requests.Session that accepts kwargs to ease complex inheritance hierarchies."""
 
-    def __init__(self, **kwargs):
+    TIMEOUT = None
+
+    def __init__(self, timeout=None, **kwargs):
         super().__init__()
+        self.timeout = timeout if timeout is not None else self.TIMEOUT
+
+    def request(self, method, url, **kwargs):
+        """Override request method to apply session-level timeout when per-request timeout is not provided."""
+        if 'timeout' not in kwargs and self.timeout is not None:
+            kwargs['timeout'] = self.timeout
+        return super().request(method, url, **kwargs)
 
 
 class BaseUrlSession(BaseSession):
