@@ -1,19 +1,44 @@
 import pytest
-import responses
+from requests import Response
+from requests.adapters import HTTPAdapter
 from requestspro.sessions import BaseSession
+
+
+class MockAdapter(HTTPAdapter):
+    """Mock adapter that captures send method calls and returns mock responses."""
+    
+    def __init__(self):
+        super().__init__()
+        self.captured_calls = []
+        
+    def send(self, request, stream=False, timeout=None, verify=None, cert=None, proxies=None):
+        """Capture the call parameters and return a mock response."""
+        self.captured_calls.append({
+            'request': request,
+            'timeout': timeout,
+            'stream': stream,
+            'verify': verify,
+            'cert': cert,
+            'proxies': proxies
+        })
+        
+        # Create a mock response
+        response = Response()
+        response.status_code = 200
+        response.headers['Content-Type'] = 'application/json'
+        response._content = b'{"key": "value"}'
+        response.url = request.url
+        response.request = request
+        return response
 
 
 class TestBaseSessionTimeout:
     """Test timeout behavior in BaseSession."""
 
-    @responses.activate
     def test_timeout_parameter(self):
-        responses.add(responses.GET, "http://example.com", json={"key": "value"})
-        
         session = BaseSession(timeout=5.0)
         assert session.timeout == 5.0
 
-    @responses.activate
     def test_timeout_class_attribute(self):
         class CustomSession(BaseSession):
             TIMEOUT = 10.0
@@ -21,7 +46,6 @@ class TestBaseSessionTimeout:
         session = CustomSession()
         assert session.timeout == 10.0
 
-    @responses.activate
     def test_timeout_parameter_overrides_class_attribute(self):
         class CustomSession(BaseSession):
             TIMEOUT = 10.0
@@ -29,105 +53,79 @@ class TestBaseSessionTimeout:
         session = CustomSession(timeout=5.0)
         assert session.timeout == 5.0
 
-    @responses.activate
     def test_no_timeout_default(self):
         session = BaseSession()
         assert session.timeout is None
 
-    @responses.activate
     def test_timeout_none_explicit(self):
         session = BaseSession(timeout=None)
         assert session.timeout is None
 
-    @responses.activate
     def test_session_timeout_applied_to_request(self):
         """Session timeout is used when no per-request timeout provided."""
-        responses.add(responses.GET, "http://example.com", json={"key": "value"})
-        
         session = BaseSession(timeout=5.0)
         
-        # Mock the parent request method to capture kwargs
-        original_request = BaseSession.__bases__[0].request
-        captured_kwargs = {}
+        # Create mock adapter and mount it
+        mock_adapter = MockAdapter()
+        session.mount('http://', mock_adapter)
+        session.mount('https://', mock_adapter)
         
-        def mock_request(self, method, url, **kwargs):
-            captured_kwargs.update(kwargs)
-            return original_request(self, method, url, **kwargs)
+        # Make request
+        response = session.request('GET', 'http://example.com')
         
-        BaseSession.__bases__[0].request = mock_request
-        
-        try:
-            session.request('GET', 'http://example.com')
-            assert captured_kwargs['timeout'] == 5.0
-        finally:
-            BaseSession.__bases__[0].request = original_request
+        # Verify timeout was passed to send method
+        assert len(mock_adapter.captured_calls) == 1
+        assert mock_adapter.captured_calls[0]['timeout'] == 5.0
+        assert response.status_code == 200
 
-    @responses.activate
     def test_per_request_timeout_overrides_session_timeout(self):
         """Per-request timeout takes precedence over session timeout."""
-        responses.add(responses.GET, "http://example.com", json={"key": "value"})
-        
         session = BaseSession(timeout=5.0)
         
-        # Mock the parent request method to capture kwargs
-        original_request = BaseSession.__bases__[0].request
-        captured_kwargs = {}
+        # Create mock adapter and mount it
+        mock_adapter = MockAdapter()
+        session.mount('http://', mock_adapter)
+        session.mount('https://', mock_adapter)
         
-        def mock_request(self, method, url, **kwargs):
-            captured_kwargs.update(kwargs)
-            return original_request(self, method, url, **kwargs)
+        # Make request with per-request timeout
+        response = session.request('GET', 'http://example.com', timeout=10.0)
         
-        BaseSession.__bases__[0].request = mock_request
-        
-        try:
-            session.request('GET', 'http://example.com', timeout=10.0)
-            assert captured_kwargs['timeout'] == 10.0
-        finally:
-            BaseSession.__bases__[0].request = original_request
+        # Verify per-request timeout was used
+        assert len(mock_adapter.captured_calls) == 1
+        assert mock_adapter.captured_calls[0]['timeout'] == 10.0
+        assert response.status_code == 200
 
-    @responses.activate
     def test_no_session_timeout_no_per_request_timeout(self):
         """No timeout applied when neither session nor per-request timeout provided."""
-        responses.add(responses.GET, "http://example.com", json={"key": "value"})
-        
         session = BaseSession()
         
-        # Mock the parent request method to capture kwargs
-        original_request = BaseSession.__bases__[0].request
-        captured_kwargs = {}
+        # Create mock adapter and mount it
+        mock_adapter = MockAdapter()
+        session.mount('http://', mock_adapter)
+        session.mount('https://', mock_adapter)
         
-        def mock_request(self, method, url, **kwargs):
-            captured_kwargs.update(kwargs)
-            return original_request(self, method, url, **kwargs)
+        # Make request without any timeout
+        response = session.request('GET', 'http://example.com')
         
-        BaseSession.__bases__[0].request = mock_request
-        
-        try:
-            session.request('GET', 'http://example.com')
-            assert 'timeout' not in captured_kwargs
-        finally:
-            BaseSession.__bases__[0].request = original_request
+        # Verify no timeout was passed (should be None by default)
+        assert len(mock_adapter.captured_calls) == 1
+        assert mock_adapter.captured_calls[0]['timeout'] is None
+        assert response.status_code == 200
 
-    @responses.activate
     def test_timeout_tuple_support(self):
         """Session timeout supports tuple format (connect, read)."""
-        responses.add(responses.GET, "http://example.com", json={"key": "value"})
-        
         session = BaseSession(timeout=(3.0, 10.0))
         assert session.timeout == (3.0, 10.0)
         
-        # Mock the parent request method to capture kwargs
-        original_request = BaseSession.__bases__[0].request
-        captured_kwargs = {}
+        # Create mock adapter and mount it
+        mock_adapter = MockAdapter()
+        session.mount('http://', mock_adapter)
+        session.mount('https://', mock_adapter)
         
-        def mock_request(self, method, url, **kwargs):
-            captured_kwargs.update(kwargs)
-            return original_request(self, method, url, **kwargs)
+        # Make request
+        response = session.request('GET', 'http://example.com')
         
-        BaseSession.__bases__[0].request = mock_request
-        
-        try:
-            session.request('GET', 'http://example.com')
-            assert captured_kwargs['timeout'] == (3.0, 10.0)
-        finally:
-            BaseSession.__bases__[0].request = original_request
+        # Verify tuple timeout was passed to send method
+        assert len(mock_adapter.captured_calls) == 1
+        assert mock_adapter.captured_calls[0]['timeout'] == (3.0, 10.0)
+        assert response.status_code == 200
