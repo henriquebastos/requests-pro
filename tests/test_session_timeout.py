@@ -46,9 +46,13 @@ class TestBaseSessionTimeout:
         session = BaseSession(timeout=None)
         assert session.timeout is None
 
-    def test_session_timeout_applied_to_request(self, mock_adapter):
+    @pytest.mark.parametrize("timeout_value,description", [
+        (5.0, "single float timeout"),
+        ((3.0, 10.0), "tuple timeout (connect, read)"),
+    ])
+    def test_session_timeout_applied_to_request(self, mock_adapter, timeout_value, description):
         """Session timeout is used when no per-request timeout provided."""
-        session = BaseSession(timeout=5.0)
+        session = BaseSession(timeout=timeout_value)
         session.mount('http://', mock_adapter)
         
         # Make request
@@ -57,7 +61,7 @@ class TestBaseSessionTimeout:
         # Verify timeout was passed to send method
         mock_adapter.send.assert_called_once()
         args, kwargs = mock_adapter.send.call_args
-        assert kwargs['timeout'] == 5.0
+        assert kwargs['timeout'] == timeout_value
         assert response.status_code == 200
 
     def test_per_request_timeout_overrides_session_timeout(self, mock_adapter):
@@ -88,18 +92,3 @@ class TestBaseSessionTimeout:
         assert kwargs['timeout'] is None
         assert response.status_code == 200
 
-    def test_timeout_tuple_support(self, mock_adapter):
-        """Session timeout supports tuple format (connect, read)."""
-        session = BaseSession(timeout=(3.0, 10.0))
-        assert session.timeout == (3.0, 10.0)
-        
-        session.mount('http://', mock_adapter)
-        
-        # Make request
-        response = session.request('GET', 'http://example.com')
-        
-        # Verify tuple timeout was passed to send method
-        mock_adapter.send.assert_called_once()
-        args, kwargs = mock_adapter.send.call_args
-        assert kwargs['timeout'] == (3.0, 10.0)
-        assert response.status_code == 200
