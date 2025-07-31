@@ -5,6 +5,18 @@ from requests.adapters import BaseAdapter
 from requestspro.sessions import BaseSession
 
 
+@pytest.fixture
+def mock_adapter():
+    """Create a mock HTTP adapter with a standard response."""
+    mock_adapter = MagicMock(spec=BaseAdapter)
+    mock_response = Response()
+    mock_response.status_code = 200
+    mock_response.headers['Content-Type'] = 'application/json'
+    mock_response._content = b'{"key": "value"}'
+    mock_adapter.send.return_value = mock_response
+    return mock_adapter
+
+
 class TestBaseSessionTimeout:
     """Test timeout behavior in BaseSession."""
 
@@ -34,17 +46,9 @@ class TestBaseSessionTimeout:
         session = BaseSession(timeout=None)
         assert session.timeout is None
 
-    def test_session_timeout_applied_to_request(self):
+    def test_session_timeout_applied_to_request(self, mock_adapter):
         """Session timeout is used when no per-request timeout provided."""
         session = BaseSession(timeout=5.0)
-        
-        # Create mock adapter and mount it
-        mock_adapter = MagicMock(spec=BaseAdapter)
-        mock_response = Response()
-        mock_response.status_code = 200
-        mock_response.headers['Content-Type'] = 'application/json'
-        mock_response._content = b'{"key": "value"}'
-        mock_adapter.send.return_value = mock_response
         session.mount('http://', mock_adapter)
         
         # Make request
@@ -56,17 +60,9 @@ class TestBaseSessionTimeout:
         assert kwargs['timeout'] == 5.0
         assert response.status_code == 200
 
-    def test_per_request_timeout_overrides_session_timeout(self):
+    def test_per_request_timeout_overrides_session_timeout(self, mock_adapter):
         """Per-request timeout takes precedence over session timeout."""
         session = BaseSession(timeout=5.0)
-        
-        # Create mock adapter and mount it
-        mock_adapter = MagicMock(spec=BaseAdapter)
-        mock_response = Response()
-        mock_response.status_code = 200
-        mock_response.headers['Content-Type'] = 'application/json'
-        mock_response._content = b'{"key": "value"}'
-        mock_adapter.send.return_value = mock_response
         session.mount('http://', mock_adapter)
         
         # Make request with per-request timeout
@@ -78,17 +74,9 @@ class TestBaseSessionTimeout:
         assert kwargs['timeout'] == 10.0
         assert response.status_code == 200
 
-    def test_no_session_timeout_no_per_request_timeout(self):
+    def test_no_session_timeout_no_per_request_timeout(self, mock_adapter):
         """No timeout applied when neither session nor per-request timeout provided."""
         session = BaseSession()
-        
-        # Create mock adapter and mount it
-        mock_adapter = MagicMock(spec=BaseAdapter)
-        mock_response = Response()
-        mock_response.status_code = 200
-        mock_response.headers['Content-Type'] = 'application/json'
-        mock_response._content = b'{"key": "value"}'
-        mock_adapter.send.return_value = mock_response
         session.mount('http://', mock_adapter)
         
         # Make request without any timeout
@@ -100,18 +88,11 @@ class TestBaseSessionTimeout:
         assert kwargs['timeout'] is None
         assert response.status_code == 200
 
-    def test_timeout_tuple_support(self):
+    def test_timeout_tuple_support(self, mock_adapter):
         """Session timeout supports tuple format (connect, read)."""
         session = BaseSession(timeout=(3.0, 10.0))
         assert session.timeout == (3.0, 10.0)
         
-        # Create mock adapter and mount it
-        mock_adapter = MagicMock(spec=BaseAdapter)
-        mock_response = Response()
-        mock_response.status_code = 200
-        mock_response.headers['Content-Type'] = 'application/json'
-        mock_response._content = b'{"key": "value"}'
-        mock_adapter.send.return_value = mock_response
         session.mount('http://', mock_adapter)
         
         # Make request
