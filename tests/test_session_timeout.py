@@ -46,7 +46,7 @@ class TestBaseSessionTimeout:
         session = BaseSession(timeout=None)
         assert session.timeout is None
 
-    @pytest.mark.parametrize("timeout_value,description", [
+    @pytest.mark.parametrize(("timeout_value", "description"), [
         (5.0, "single float timeout"),
         ((3.0, 10.0), "tuple timeout (connect, read)"),
     ])
