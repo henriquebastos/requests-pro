@@ -59,6 +59,29 @@ class Audit(BaseAdapter):
     def close(self):
         return self.adapter.close()
 
+    def _safe_get_request_body(self, request):
+        """Safely extract request body, returning <stream> for stream-like objects."""
+        body = request.body
+        
+        if isinstance(body, str):
+            return body
+        
+        # Check if it's a stream-like object (has read method or is iterable but not bytes)
+        if hasattr(body, 'read') or (hasattr(body, '__iter__') and not isinstance(body, (bytes, str))):
+            return "<stream>"
+        
+        # Handle bytes and None as before
+        return (body or b"").decode()
+
+    def _safe_get_response_body(self, response):
+        """Safely extract response body, returning <stream> for streamed responses."""
+        # Check if response is being streamed
+        if hasattr(response, 'raw') and hasattr(response.raw, 'isclosed') and not response.raw.isclosed():
+            return "<stream>"
+        
+        # For normal responses, return text as before
+        return response.text
+
     def audit(self, response):
         """Turn a response and its request into a detailed log."""
         request = response.request
@@ -70,10 +93,10 @@ class Audit(BaseAdapter):
                 request_method=request.method,
                 request_url=request.url,
                 request_headers=dict(request.headers),
-                request_body=request.body if isinstance(request.body, str) else (request.body or b"").decode(),
+                request_body=self._safe_get_request_body(request),
                 response_status=response.status_code,
                 response_headers=dict(response.headers),
-                response_body=response.text,
+                response_body=self._safe_get_response_body(response),
             )
         )
 
