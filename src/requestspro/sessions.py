@@ -139,6 +139,14 @@ class CustomJsonSession(BaseSession):
     def before_prepare_body(self, request):
         """Encode json using custom encoder before PrepareRequest.prepare_body is called."""
 
+        # When there is nothing to encode, skip entirely.
+        # request.data defaults to [] and request.json defaults to None on a new Request.
+        # Without this guard, json.dumps(None) produces "null" as a 4-byte body with
+        # Content-Type: application/json on every request — including GETs. Some CDNs
+        # (e.g. CloudFront) reject GET requests with a body.
+        if not request.data and request.json is None:
+            return
+
         # When Request has data but no json, there is nothing to encode.
         if request.data and request.json is None:
             return
