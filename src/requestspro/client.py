@@ -12,7 +12,7 @@ class Client:
     def request(self, method, url, params=None, json=None, **kwargs):
         response = self.session.request(method, url, params=params, json=json, **kwargs)
         response.raise_for_status()
-        return response.json()
+        return response.json() if response.content else None
 
     get = partialmethod(request, "GET")
     post = partialmethod(request, "POST")

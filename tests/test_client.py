@@ -40,6 +40,18 @@ class TestClient:
         with pytest.raises(HTTPError):
             client.request("GET", "https://h/first")
 
+    def test_highlevel_request_returns_none_on_204_no_content(self, responses):
+        responses.add("PUT", "https://h/first", status=204, body="")
+
+        # given: a client
+        client = Client(Session())
+
+        # when: calling a request that returns 204 No Content
+        result = client.request("PUT", "https://h/first")
+
+        # then: None is returned instead of crashing on empty body
+        assert result is None
+
     @pytest.mark.parametrize("method", ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"])
     def test_client_has_http_methods(self, method):
         # given: an instance of the Client
