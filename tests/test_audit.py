@@ -1,8 +1,8 @@
 from datetime import datetime
-from io import BytesIO, StringIO
+from io import BytesIO
 
 from requests import HTTPError, Session
-from requests.adapters import HTTPAdapter, Response
+from requests.adapters import BaseAdapter, HTTPAdapter, Response
 
 from requestspro.audit import Audit, AuditDict
 from requestspro.auth import RecoverableAuth
@@ -152,21 +152,41 @@ class TestAuditFilter:
             assert log["response"]["headers"] == {}
 
 
+class CannedAdapter(BaseAdapter):
+    """Return a fixed response without reading request.body.
+
+    Unlike the `responses` mock, this preserves a file-like request body so the
+    audit can observe that it is a stream.
+    """
+
+    def send(self, request, **kwargs):
+        response = Response()
+        response.status_code = 200
+        response._content = b'{"success": true}'
+        response.request = request
+        response.url = request.url
+        return response
+
+    def close(self):
+        pass
+
+
 class TestAuditStreams:
     """Test cases for stream handling in audit logs."""
 
-    def test_request_with_file_like_object_should_show_stream_placeholder(self, responses):
-        """When request body is a file-like object, audit should show <stream> placeholder."""
-        responses.add("POST", "https://example.com/upload", status=200, json={"success": True})
-        
+    def test_request_with_file_like_object_should_show_stream_placeholder(self):
+        """A file-like request body is recorded as the <stream> placeholder.
+
+        Uses a canned adapter rather than `responses`, which would read the
+        BytesIO into a plain string before the audit sees it.
+        """
         session = Session()
-        audit = Audit.for_session(session)
-        
-        # Create a file-like object
+        audit = Audit(CannedAdapter())
+        session.mount("https://", audit)
+
         file_data = BytesIO(b"binary file content")
-        
         session.post("https://example.com/upload", data=file_data)
-        
+
         assert len(audit) == 1
         event = audit[0]
         assert event["request"]["body"] == "<stream>"
@@ -174,17 +194,17 @@ class TestAuditStreams:
     def test_request_with_generator_should_show_stream_placeholder(self, responses):
         """When request body is a generator, audit should show <stream> placeholder."""
         responses.add("POST", "https://example.com/upload", status=200, json={"success": True})
-        
+
         session = Session()
         audit = Audit.for_session(session)
-        
+
         # Create a generator
         def data_generator():
             yield b"chunk1"
             yield b"chunk2"
-        
+
         session.post("https://example.com/upload", data=data_generator())
-        
+
         assert len(audit) == 1
         event = audit[0]
         assert event["request"]["body"] == "<stream>"
@@ -192,12 +212,12 @@ class TestAuditStreams:
     def test_request_with_string_body_should_work_normally(self, responses):
         """When request body is a string, audit should work as before."""
         responses.add("POST", "https://example.com/data", status=200, json={"success": True})
-        
+
         session = Session()
         audit = Audit.for_session(session)
-        
+
         session.post("https://example.com/data", data="normal string data")
-        
+
         assert len(audit) == 1
         event = audit[0]
         assert event["request"]["body"] == "normal string data"
@@ -205,12 +225,12 @@ class TestAuditStreams:
     def test_request_with_bytes_body_should_work_normally(self, responses):
         """When request body is bytes, audit should decode it as before."""
         responses.add("POST", "https://example.com/data", status=200, json={"success": True})
-        
+
         session = Session()
         audit = Audit.for_session(session)
-        
+
         session.post("https://example.com/data", data=b"normal bytes data")
-        
+
         assert len(audit) == 1
         event = audit[0]
         assert event["request"]["body"] == "normal bytes data"
@@ -218,12 +238,12 @@ class TestAuditStreams:
     def test_response_with_stream_should_show_stream_placeholder(self, responses):
         """When response is streamed, audit should show <stream> placeholder."""
         responses.add("GET", "https://example.com/large-file", status=200, body="large file content")
-        
+
         session = Session()
         audit = Audit.for_session(session)
-        
-        response = session.get("https://example.com/large-file", stream=True)
-        
+
+        session.get("https://example.com/large-file", stream=True)
+
         assert len(audit) == 1
         event = audit[0]
         assert event["response"]["body"] == "<stream>"
@@ -231,12 +251,12 @@ class TestAuditStreams:
     def test_normal_response_should_work_as_before(self, responses):
         """When response is not streamed, audit should work as before."""
         responses.add("GET", "https://example.com/data", status=200, json={"message": "hello"})
-        
+
         session = Session()
         audit = Audit.for_session(session)
-        
-        response = session.get("https://example.com/data")
-        
+
+        session.get("https://example.com/data")
+
         assert len(audit) == 1
         event = audit[0]
         assert '"message": "hello"' in event["response"]["body"]

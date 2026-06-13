@@ -50,7 +50,9 @@ class Audit(BaseAdapter):
         return audit
 
     def send(self, request, **kwargs):
-        response = self.audit(self.adapter.send(request, **kwargs))
+        # stream=True means the caller will read the body lazily; reading it here to
+        # audit would consume the stream, so we record a placeholder instead.
+        response = self.audit(self.adapter.send(request, **kwargs), stream=kwargs.get("stream", False))
         # The response.connection is set as the wrapped adapter.
         # We must update it so any retries would pass through the audit.
         response.connection = self
@@ -60,29 +62,28 @@ class Audit(BaseAdapter):
         return self.adapter.close()
 
     def _safe_get_request_body(self, request):
-        """Safely extract request body, returning <stream> for stream-like objects."""
+        """Return a <stream> placeholder for stream-like request bodies; otherwise the body."""
         body = request.body
-        
+
         if isinstance(body, str):
             return body
-        
-        # Check if it's a stream-like object (has read method or is iterable but not bytes)
-        if hasattr(body, 'read') or (hasattr(body, '__iter__') and not isinstance(body, (bytes, str))):
+
+        # A file-like (has read) or non-bytes iterable (generator) body is a stream:
+        # reading it to audit would consume the upload, so record a placeholder.
+        if hasattr(body, "read") or (hasattr(body, "__iter__") and not isinstance(body, (bytes, str))):
             return "<stream>"
-        
-        # Handle bytes and None as before
+
+        # Bytes and None decode as before.
         return (body or b"").decode()
 
-    def _safe_get_response_body(self, response):
-        """Safely extract response body, returning <stream> for streamed responses."""
-        # Check if response is being streamed
-        if hasattr(response, 'raw') and hasattr(response.raw, 'isclosed') and not response.raw.isclosed():
+    def _safe_get_response_body(self, response, stream):
+        """Return a <stream> placeholder for streamed responses; otherwise the text body."""
+        if stream:
             return "<stream>"
-        
-        # For normal responses, return text as before
+
         return response.text
 
-    def audit(self, response):
+    def audit(self, response, *, stream=False):
         """Turn a response and its request into a detailed log."""
         request = response.request
 
@@ -96,7 +97,7 @@ class Audit(BaseAdapter):
                 request_body=self._safe_get_request_body(request),
                 response_status=response.status_code,
                 response_headers=dict(response.headers),
-                response_body=self._safe_get_response_body(response),
+                response_body=self._safe_get_response_body(response, stream),
             )
         )
 
