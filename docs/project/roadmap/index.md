@@ -17,7 +17,6 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 | Item | Status | Notes |
 |------|--------|-------|
 | Maintenance: open + land PR from `claude/issue-4-20250915-2231` (audit stream placeholder) | Planned | Fix and tests already written; decision recorded in `decisions.md` |
-| Maintenance: land or fold `fix/handle-204-no-content` (D-008) | Planned | May merge into a future error-handling story instead |
 | Maintenance: delete obsolete branches (`claude/issue-2-*`, `add-claude-github-actions-*`) | Planned | Housekeeping |
 | CV1 — Error semantics: API error taxonomy, `raise_for_status` hooks (incl. "HTTP 200 with error body"), transient/permanent classification, response-envelope hook | Planned | Framework ships no error hooks today; the demo hand-rolls `EduzzAPIError` + `ERROR_STATUSES` |
 | CV2 — Testing toolkit (`requestspro.testing`): `ProResponse` builders, recording fake session/adapter, given/when/then conventions | Planned | Test setup currently means manual `Response._content`/`headers`/`status_code` plumbing |
@@ -30,6 +29,7 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 
 | Item | Notes |
 |------|-------|
+| 2026-06-13 — Maintenance: return `None` on 204 No Content in `Client.request` (D-008) | `client.py` returns `None` when the response has no body, instead of raising `JSONDecodeError` on 204/empty responses |
 | 2026-06-13 — Maintenance: skip JSON encoding on bodiless GET/DELETE requests (PR #5) | `sessions.py` early-return when no `data`/`json`; avoids a `null` body + JSON content-type on GETs that some CDNs reject |
 | 2026-06-12 — Maintenance: GitHub Actions pinned to Node 24 (checkout v6, setup-python v6, setup-uv v7) + publish.yml `python-version-file` fix | PR #6; CI green. setup-uv held at v7 to keep pin-by-major (see `decisions.md`) |
 | 2026-06-12 — Maintenance: lint debt paid (D-001) + `[build-system]` declared (D-002) | First Ariad delivery session; CI/release pipeline restored (green run on `main`) |
