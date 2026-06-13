@@ -29,13 +29,13 @@ Consequences: Revisit setup-uv v8 (and SHA-pinning generally) if the repo adopts
 ### Audit replaces streamed bodies with a placeholder
 
 **Date:** 2025-09-15
-**Status:** Decided (implementation on branch `claude/issue-4-20250915-2231`, not yet merged)
+**Status:** Decided (landed 2026-06-13)
 
 Decision: When a request or response body is a stream (file-like/generator, or `stream=True`), the audit records a placeholder instead of materializing the body (issue #4; option 1 of the five discussed, chosen by the owner, TDD approach).
 
 Rationale: Reading the body inside the adapter either crashes (`AttributeError`/`UnicodeDecodeError` on file-like and binary bodies) or defeats streaming by loading everything into memory. Audit must never break or distort the request it observes.
 
-Consequences: Streamed bodies are not auditable by design; a richer strategy (sampling, metadata-only, content-type aware) stays on the radar.
+Consequences: Streamed bodies are not auditable by design; a richer strategy (sampling, metadata-only, content-type aware) stays on the radar. Detection: response streaming keys off the `stream` kwarg the audit adapter receives from `Session.send`; request streaming off a file-like or non-bytes-iterable body.
 
 ### Webhook verification belongs to the integration package
 
