@@ -4,20 +4,18 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 
 ## Current Focus
 
-**Restore the delivery pipeline, then grow the framework.** CI was red on every push since 2025-07-31 because `main` carried auto-fixable lint debt; `lint` failed → `test` was skipped → `publish` could never run. Paid on 2026-06-12. Next: land the pending fixes (PR #5, issue #4 branch, 204 branch), then grow the framework toward the Navigator's vision — the same architecture in sync and async flavors, with the missing cross-cutting capabilities, legible enough that an agent can derive a new client from an API spec.
+**Restore the delivery pipeline, then grow the framework.** CI was red on every push since 2025-07-31 because `main` carried auto-fixable lint debt; `lint` failed → `test` was skipped → `publish` could never run. Paid on 2026-06-12, and the pending fixes have all landed (PR #5 bodiless-GET, #6 Node 24, #7 204, and the issue #4 audit stream fix). Next: grow the framework toward the Navigator's vision — the same architecture in sync and async flavors, with the missing cross-cutting capabilities, legible enough that an agent can derive a new client from an API spec.
 
 ## Active Work
 
 | Item | Status | Notes |
 |------|--------|-------|
-| (none) | — | Next pull: land issue #4 audit stream fix |
+| (none) | — | Next pull: framework growth — CV1 (error semantics) |
 
 ## Planned Work
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Maintenance: open + land PR from `claude/issue-4-20250915-2231` (audit stream placeholder) | Planned | Fix and tests already written; decision recorded in `decisions.md` |
-| Maintenance: delete obsolete branches (`claude/issue-2-*`, `add-claude-github-actions-*`) | Planned | Housekeeping |
 | CV1 — Error semantics: API error taxonomy, `raise_for_status` hooks (incl. "HTTP 200 with error body"), transient/permanent classification, response-envelope hook | Planned | Framework ships no error hooks today; the demo hand-rolls `EduzzAPIError` + `ERROR_STATUSES` |
 | CV2 — Testing toolkit (`requestspro.testing`): `ProResponse` builders, recording fake session/adapter, given/when/then conventions | Planned | Test setup currently means manual `Response._content`/`headers`/`status_code` plumbing |
 | CV3 — Webhook verification toolkit: parametrizable HMAC verifier base (base string, headers, tolerance window, `compare_digest`, exception taxonomy, verify+parse atomicity) | Planned | The same skeleton fits any provider that HMAC-signs its webhooks; institutionalizes "verification lives in the integration package" |
@@ -29,6 +27,8 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 
 | Item | Notes |
 |------|-------|
+| 2026-06-13 — Maintenance: audit records `<stream>` for streamed request/response bodies (issue #4) | Response streams detected via the `stream` kwarg; request streams via file-like/iterable body. See `decisions.md` |
+| 2026-06-13 — Maintenance: deleted merged/obsolete branches (`ci/node24-action-pins`, `add-claude-github-actions-*`, `claude/issue-2-*`) | Housekeeping; the timeout feature they carried already shipped via PR #3 |
 | 2026-06-13 — Maintenance: return `None` on 204 No Content in `Client.request` (D-008) | `client.py` returns `None` when the response has no body, instead of raising `JSONDecodeError` on 204/empty responses |
 | 2026-06-13 — Maintenance: skip JSON encoding on bodiless GET/DELETE requests (PR #5) | `sessions.py` early-return when no `data`/`json`; avoids a `null` body + JSON content-type on GETs that some CDNs reject |
 | 2026-06-12 — Maintenance: GitHub Actions pinned to Node 24 (checkout v6, setup-python v6, setup-uv v7) + publish.yml `python-version-file` fix | PR #6; CI green. setup-uv held at v7 to keep pin-by-major (see `decisions.md`) |
