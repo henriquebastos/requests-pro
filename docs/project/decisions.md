@@ -15,6 +15,17 @@ Rationale: The project advances in bursts with long gaps; the Navigator wants an
 
 Consequences: Agents read `AGENTS.md` and the docs listed there before meaningful work; non-trivial work goes through plan/validation/review/history checkpoints; documentation updates in the same cycle as code.
 
+### Pin GitHub Actions to Node 24; setup-uv on v7 not v8
+
+**Date:** 2026-06-12
+**Status:** Decided
+
+Decision: The workflows pin `actions/checkout@v6`, `actions/setup-python@v6`, and `astral-sh/setup-uv@v7` — the newest releases running on the Node 24 runtime that GitHub Actions defaults to from 2026-06-16 (Node 20 removed 2026-09-16). setup-uv stays on v7 rather than the latest v8.
+
+Rationale: v8 stopped publishing major/minor tags, so `@v8` no longer resolves; adopting it would force full-tag (or SHA) pinning and forfeit the automatic patch updates that pin-by-major provides. v7 runs on Node 24 and keeps the repo's pin-by-major convention. A breaking-change scan found nothing in checkout v6, setup-python v6, or setup-uv v6/v7 that affects this repo's usage.
+
+Consequences: Revisit setup-uv v8 (and SHA-pinning generally) if the repo adopts Dependabot or a supply-chain hardening policy. Tracked on the roadmap radar.
+
 ### Audit replaces streamed bodies with a placeholder
 
 **Date:** 2025-09-15

@@ -31,6 +31,7 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 
 | Item | Notes |
 |------|-------|
+| 2026-06-12 — Maintenance: GitHub Actions pinned to Node 24 (checkout v6, setup-python v6, setup-uv v7) + publish.yml `python-version-file` fix | PR #6; CI green. setup-uv held at v7 to keep pin-by-major (see `decisions.md`) |
 | 2026-06-12 — Maintenance: lint debt paid (D-001) + `[build-system]` declared (D-002) | First Ariad delivery session; CI/release pipeline restored (green run on `main`) |
 | 2026-06-12 — Ariad adopted; deep survey of framework core + demo; CI root cause identified | See `docs/process/worklog.md` |
 | 2025-07 — Session-level timeout support (PR #3) | Last merged feature; its merge introduced part of the lint debt |
@@ -46,3 +47,4 @@ Problems visible but not planned; each names the problem and its evidence/trigge
 - **Audit hardening** — bounded/streamable event storage, logging handlers, secret redaction by default, `http://` schema coverage (D-004). Trigger: first long-running production consumer.
 - **Access to the raw Response** — `Client.request` returns only parsed JSON; status/headers are unreachable for callers (needed for pagination, rate-limit headers). Trigger: first consumer needing headers.
 - **Cache-injectable factory convention** — `from_credentials` composition often hardcodes a cache backend, blocking non-Django use; a documented convention for injecting in-memory vs. shared cache would help the recipe. Trigger: recipe work (CV6).
+- **setup-uv v8 / SHA-pinned actions** — v8 dropped major/minor tags (immutable releases), so adopting it means full-tag or SHA pinning and losing automatic patch updates; deferred to keep pin-by-major. Trigger: adopting Dependabot or a supply-chain hardening policy.
