@@ -18,8 +18,8 @@ class BaseSession(Session):
 
     def request(self, method, url, **kwargs):
         """Override request to handle session-level timeout."""
-        if 'timeout' not in kwargs and self.timeout is not None:
-            kwargs['timeout'] = self.timeout
+        if "timeout" not in kwargs and self.timeout is not None:
+            kwargs["timeout"] = self.timeout
         return super().request(method, url, **kwargs)
 
 
