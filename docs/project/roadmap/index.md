@@ -10,13 +10,12 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 
 | Item | Status | Notes |
 |------|--------|-------|
-| (none) | — | Next pull: rebase + land PR #5 |
+| (none) | — | Next pull: land issue #4 audit stream fix |
 
 ## Planned Work
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Maintenance: rebase + land PR #5 (`json=None` GET body) | Planned | Trivial quote-style conflict with the lint fix in `sessions.py` expected |
 | Maintenance: open + land PR from `claude/issue-4-20250915-2231` (audit stream placeholder) | Planned | Fix and tests already written; decision recorded in `decisions.md` |
 | Maintenance: land or fold `fix/handle-204-no-content` (D-008) | Planned | May merge into a future error-handling story instead |
 | Maintenance: delete obsolete branches (`claude/issue-2-*`, `add-claude-github-actions-*`) | Planned | Housekeeping |
@@ -31,6 +30,7 @@ The roadmap describes meaningful progress, not every task. Taxonomy, codes, fold
 
 | Item | Notes |
 |------|-------|
+| 2026-06-13 — Maintenance: skip JSON encoding on bodiless GET/DELETE requests (PR #5) | `sessions.py` early-return when no `data`/`json`; avoids a `null` body + JSON content-type on GETs that some CDNs reject |
 | 2026-06-12 — Maintenance: GitHub Actions pinned to Node 24 (checkout v6, setup-python v6, setup-uv v7) + publish.yml `python-version-file` fix | PR #6; CI green. setup-uv held at v7 to keep pin-by-major (see `decisions.md`) |
 | 2026-06-12 — Maintenance: lint debt paid (D-001) + `[build-system]` declared (D-002) | First Ariad delivery session; CI/release pipeline restored (green run on `main`) |
 | 2026-06-12 — Ariad adopted; deep survey of framework core + demo; CI root cause identified | See `docs/process/worklog.md` |
