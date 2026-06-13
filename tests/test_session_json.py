@@ -53,6 +53,29 @@ class SampleCustomJsonSession(CustomJsonSession, CustomResponseSession):
     RESPONSE_CLASS = ProResponse
 
 
+class TestCustomJsonSessionBodilessRequest:
+    """GET requests without json/data should not get a body or Content-Type header."""
+
+    def test_get_has_no_body(self, responses):
+        responses.add("GET", "https://h/data", json={"ok": True})
+        session = SampleCustomJsonSession()
+        response = session.get("https://h/data")
+        assert response.request.body is None
+
+    def test_get_has_no_content_type(self, responses):
+        responses.add("GET", "https://h/data", json={"ok": True})
+        session = SampleCustomJsonSession()
+        response = session.get("https://h/data")
+        assert "Content-Type" not in response.request.headers
+
+    def test_post_with_json_still_encodes(self, responses):
+        responses.add("POST", "https://h/data", json={"ok": True})
+        session = SampleCustomJsonSession()
+        response = session.post("https://h/data", json={"key": "val"})
+        assert response.request.body is not None
+        assert response.request.headers["Content-Type"] == "application/json"
+
+
 class TestCustomJsonSession:
     @pytest.fixture(autouse=True)
     def mocked_post(self, responses):
