@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+uv_version=0.12.7
+
+if [[ "$(uv --version 2>/dev/null || true)" != "uv ${uv_version} "* ]]; then
+    sudo python3 -m pip install --disable-pip-version-check "uv==${uv_version}"
+fi
+
+uv sync --locked --all-extras --dev
+uv pip install -e .
